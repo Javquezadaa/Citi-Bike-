@@ -14,7 +14,7 @@ st.title("Citi Bike 2022 Dashboard")
 st.markdown("This dashboard visualizes bike trips in New York City with interactive charts and a map.")
 
 # ------------------------- LOAD DATA -------------------------
-df = pd.read_csv('Tasks/df_2022.csv', parse_dates=['started_at','ended_at','date'])
+df = pd.read_csv('..Data/df_2022.csv', parse_dates=['started_at','ended_at','date'])
 
 # ------------------------- CREATE COLUMNS -------------------------
 df['month'] = df['date'].dt.month.astype(int)
