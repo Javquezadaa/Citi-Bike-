@@ -167,26 +167,51 @@ elif page == "Most popular stations":
 # ========================= HOURLY HEATMAP =========================
 elif page == "Hourly Heatmap":
     st.header("Hourly Heatmap: Trips by Weekday and Hour")
-    
+
+    # Aggregate trips by weekday and hour
     hourly = df.groupby(['weekday', 'hour']).size().reset_index(name='trip_count')
     weekday_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     hourly['weekday'] = pd.Categorical(hourly['weekday'], categories=weekday_order, ordered=True)
-    
+
+    # --- Filter selection ---
+    filter_option = st.radio(
+        "Select view:",
+        ["All Days", "Weekdays Only", "Weekend Only"],
+        horizontal=True
+    )
+
+    if filter_option == "Weekdays Only":
+        hourly = hourly[hourly['weekday'].isin(weekday_order[:5])]
+    elif filter_option == "Weekend Only":
+        hourly = hourly[hourly['weekday'].isin(weekday_order[5:])]
+
+    # Pivot for heatmap
     heatmap_data = hourly.pivot(index="weekday", columns="hour", values="trip_count")
-    
-    fig, ax = plt.subplots(figsize=(14,6))
-    sns.heatmap(heatmap_data, cmap="YlGnBu", linewidths=.5, ax=ax)
-    ax.set_title("Heatmap of Trips by Hour and Weekday")
-    ax.set_xlabel("Hour of Day")
-    ax.set_ylabel("Day of Week")
-    
-    st.pyplot(fig)
-    
+
+    # ---- Plotly interactive heatmap ----
+    import plotly.express as px
+    fig = px.imshow(
+        heatmap_data,
+        labels=dict(x="Hour of Day", y="Day of Week", color="Trip Count"),
+        x=heatmap_data.columns,
+        y=heatmap_data.index,
+        color_continuous_scale="YlGnBu",
+        aspect="auto"
+    )
+
+    fig.update_layout(
+        title=f"Interactive Heatmap of Trips by Hour and Weekday ({filter_option})",
+        xaxis=dict(side="top"),
+        margin=dict(l=60, r=40, t=80, b=40)
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
     st.markdown("""
     **Insights:**
     - Clear **commuter peaks**: 7–9 AM and 5–7 PM on weekdays.  
     - **Weekend demand** shifts to mid-day (10 AM–4 PM).  
-    - Time-of-day patterns highlight the need for **dynamic bike rebalancing**.
+    - The toggle helps highlight weekday commuting vs. weekend leisure patterns.  
     """)
 
 # ========================= TRIP DURATION BY USER TYPE =========================
