@@ -8,6 +8,7 @@ from datetime import datetime as dt
 from PIL import Image
 import matplotlib.pyplot as plt
 import seaborn as sns
+import plotly.express as px  # moved here to avoid repeated imports
 
 # ------------------------- PAGE CONFIG -------------------------
 st.set_page_config(page_title='Citi Bike Dashboard', layout='wide')
@@ -134,7 +135,7 @@ elif page == "Most popular stations":
         default=df['season'].unique()
     )
     
-    df1 = df.query('season == @season_filter')
+    df1 = df[df['season'].isin(season_filter)]  # fixed for list filtering
     total_rides = float(df1.shape[0])
     st.metric(label="Total Bike Rides", value=f"{int(total_rides):,}")
     
@@ -165,64 +166,61 @@ elif page == "Most popular stations":
     """)
 
 # ========================= INTERACTIVE HOURLY HEATMAP WITH HOUR SLIDER =========================
-import streamlit as st
-import pandas as pd
-import plotly.express as px
+elif page == "Hourly Heatmap":
+    st.header("Hourly Heatmap: Trips by Weekday and Hour")
 
-st.header("Hourly Heatmap: Trips by Weekday and Hour")
+    # Day filter
+    filter_option = st.selectbox("Select days to display:", ["All Days", "Weekdays Only", "Weekend Only"])
 
-# Day filter
-filter_option = st.selectbox("Select days to display:", ["All Days", "Weekdays Only", "Weekend Only"])
+    # Hour range slider
+    hour_range = st.slider("Select hour range:", 0, 23, (0, 23))
 
-# Hour range slider
-hour_range = st.slider("Select hour range:", 0, 23, (0, 23))
+    # Define weekday order
+    weekday_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
-# Define weekday order
-weekday_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    # Group by weekday and hour
+    hourly = df.groupby(['weekday', 'hour']).size().reset_index(name='trip_count')
 
-# Group by weekday and hour
-hourly = df.groupby(['weekday', 'hour']).size().reset_index(name='trip_count')
+    # Filter by day
+    if filter_option == "Weekdays Only":
+        hourly = hourly[hourly['weekday'].isin(weekday_order[:5])]
+        hourly['weekday'] = pd.Categorical(hourly['weekday'], categories=weekday_order[:5], ordered=True)
+    elif filter_option == "Weekend Only":
+        hourly = hourly[hourly['weekday'].isin(weekday_order[5:])]
+        hourly['weekday'] = pd.Categorical(hourly['weekday'], categories=weekday_order[5:], ordered=True)
+    else:
+        hourly['weekday'] = pd.Categorical(hourly['weekday'], categories=weekday_order, ordered=True)
 
-# Filter by day
-if filter_option == "Weekdays Only":
-    hourly = hourly[hourly['weekday'].isin(weekday_order[:5])]
-    hourly['weekday'] = pd.Categorical(hourly['weekday'], categories=weekday_order[:5], ordered=True)
-elif filter_option == "Weekend Only":
-    hourly = hourly[hourly['weekday'].isin(weekday_order[5:])]
-    hourly['weekday'] = pd.Categorical(hourly['weekday'], categories=weekday_order[5:], ordered=True)
-else:
-    hourly['weekday'] = pd.Categorical(hourly['weekday'], categories=weekday_order, ordered=True)
+    # Filter by selected hour range
+    hourly = hourly[(hourly['hour'] >= hour_range[0]) & (hourly['hour'] <= hour_range[1])]
 
-# Filter by selected hour range
-hourly = hourly[(hourly['hour'] >= hour_range[0]) & (hourly['hour'] <= hour_range[1])]
+    # Pivot for heatmap
+    heatmap_data = hourly.pivot(index="weekday", columns="hour", values="trip_count").fillna(0)
 
-# Pivot for heatmap
-heatmap_data = hourly.pivot(index="weekday", columns="hour", values="trip_count").fillna(0)
+    # Create interactive heatmap
+    fig = px.imshow(
+        heatmap_data,
+        labels=dict(x="Hour of Day", y="Day of Week", color="Trip Count"),
+        x=heatmap_data.columns,
+        y=heatmap_data.index,
+        color_continuous_scale="YlGnBu"
+    )
 
-# Create interactive heatmap
-fig = px.imshow(
-    heatmap_data,
-    labels=dict(x="Hour of Day", y="Day of Week", color="Trip Count"),
-    x=heatmap_data.columns,
-    y=heatmap_data.index,
-    color_continuous_scale="YlGnBu"
-)
+    fig.update_layout(
+        title="Interactive Heatmap of Trips by Hour and Weekday",
+        xaxis_title="Hour of Day",
+        yaxis_title="Day of Week",
+        yaxis=dict(categoryorder="array", categoryarray=heatmap_data.index)
+    )
 
-fig.update_layout(
-    title="Interactive Heatmap of Trips by Hour and Weekday",
-    xaxis_title="Hour of Day",
-    yaxis_title="Day of Week",
-    yaxis=dict(categoryorder="array", categoryarray=heatmap_data.index)
-)
+    st.plotly_chart(fig, use_container_width=True)
 
-st.plotly_chart(fig, use_container_width=True)
-
-st.markdown("""
-**Insights:**
-- Clear **commuter peaks**: 7–9 AM and 5–7 PM on weekdays.  
-- **Weekend demand** shifts to mid-day (10 AM–4 PM).  
-- Time-of-day patterns highlight the need for **dynamic bike rebalancing**.
-""")
+    st.markdown("""
+    **Insights:**
+    - Clear **commuter peaks**: 7–9 AM and 5–7 PM on weekdays.  
+    - **Weekend demand** shifts to mid-day (10 AM–4 PM).  
+    - Time-of-day patterns highlight the need for **dynamic bike rebalancing**.
+    """)
 
 # ========================= TRIP DURATION BY USER TYPE =========================
 elif page == "Trip Duration by User Type":
@@ -272,12 +270,13 @@ elif page == "Interactive map with aggregated bike trips":
     - Clusters appear in downtown and tourist areas; sparse trips elsewhere.  
     - Useful for planning station expansions or redistribution efforts.  
     """)
+
 # ========================= RECOMMENDATIONS =========================
 else:
     st.header("Conclusion and Recommendations")
     
     recs_image = Image.open("Tasks/broadway-5813302_1280.jpg")
-    st.image(recs_image, use_container_width=True)
+    st.image(recs_image, use_column_width=True)
     
     st.markdown("### Strategic Recommendations for Citi Bike NYC")
     
