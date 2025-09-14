@@ -8,7 +8,7 @@ from datetime import datetime as dt
 from PIL import Image
 import matplotlib.pyplot as plt
 import seaborn as sns
-import plotly.express as px  # moved here to avoid repeated imports
+import plotly.express as px  
 
 # ------------------------- PAGE CONFIG -------------------------
 st.set_page_config(page_title='Citi Bike Dashboard', layout='wide')
