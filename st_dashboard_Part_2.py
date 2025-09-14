@@ -167,21 +167,21 @@ elif page == "Most popular stations":
 # ========================= HOURLY HEATMAP =========================
 elif page == "Hourly Heatmap":
     st.header("Heatmap of Trips by Hour and Weekday")
-    
+
     hourly = df.groupby(['weekday', 'hour']).size().reset_index(name='trip_count')
     weekday_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     hourly['weekday'] = pd.Categorical(hourly['weekday'], categories=weekday_order, ordered=True)
-    
+
     heatmap_data = hourly.pivot(index="weekday", columns="hour", values="trip_count")
-    
+
     fig, ax = plt.subplots(figsize=(14,6))
     sns.heatmap(heatmap_data, cmap="YlGnBu", linewidths=.5, ax=ax)
     ax.set_title("Heatmap of Trips by Hour and Weekday")
     ax.set_xlabel("Hour of Day")
     ax.set_ylabel("Day of Week")
-    
+
     st.pyplot(fig)
-    
+
     st.markdown("""
     **Insights:**
     - Clear **commuter peaks**: 7–9 AM and 5–7 PM on weekdays, consistent with work commuting.  
