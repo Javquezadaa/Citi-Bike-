@@ -164,55 +164,65 @@ elif page == "Most popular stations":
     - These high-demand locations are also where **dock imbalance issues** (empty or full stations) are most likely to occur.  
     """)
 
-# ========================= HOURLY HEATMAP =========================
-elif page == "Hourly Heatmap":
-    st.header("Hourly Heatmap: Trips by Weekday and Hour")
+# ========================= INTERACTIVE HOURLY HEATMAP WITH HOUR SLIDER =========================
+import streamlit as st
+import pandas as pd
+import plotly.express as px
 
-    # Aggregate trips by weekday and hour
-    hourly = df.groupby(['weekday', 'hour']).size().reset_index(name='trip_count')
-    weekday_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+st.header("Hourly Heatmap: Trips by Weekday and Hour")
+
+# Day filter
+filter_option = st.selectbox("Select days to display:", ["All Days", "Weekdays Only", "Weekend Only"])
+
+# Hour range slider
+hour_range = st.slider("Select hour range:", 0, 23, (0, 23))
+
+# Define weekday order
+weekday_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+# Group by weekday and hour
+hourly = df.groupby(['weekday', 'hour']).size().reset_index(name='trip_count')
+
+# Filter by day
+if filter_option == "Weekdays Only":
+    hourly = hourly[hourly['weekday'].isin(weekday_order[:5])]
+    hourly['weekday'] = pd.Categorical(hourly['weekday'], categories=weekday_order[:5], ordered=True)
+elif filter_option == "Weekend Only":
+    hourly = hourly[hourly['weekday'].isin(weekday_order[5:])]
+    hourly['weekday'] = pd.Categorical(hourly['weekday'], categories=weekday_order[5:], ordered=True)
+else:
     hourly['weekday'] = pd.Categorical(hourly['weekday'], categories=weekday_order, ordered=True)
 
-    # --- Filter selection ---
-    filter_option = st.radio(
-        "Select view:",
-        ["All Days", "Weekdays Only", "Weekend Only"],
-        horizontal=True
-    )
+# Filter by selected hour range
+hourly = hourly[(hourly['hour'] >= hour_range[0]) & (hourly['hour'] <= hour_range[1])]
 
-    if filter_option == "Weekdays Only":
-        hourly = hourly[hourly['weekday'].isin(weekday_order[:5])]
-    elif filter_option == "Weekend Only":
-        hourly = hourly[hourly['weekday'].isin(weekday_order[5:])]
+# Pivot for heatmap
+heatmap_data = hourly.pivot(index="weekday", columns="hour", values="trip_count").fillna(0)
 
-    # Pivot for heatmap
-    heatmap_data = hourly.pivot(index="weekday", columns="hour", values="trip_count")
+# Create interactive heatmap
+fig = px.imshow(
+    heatmap_data,
+    labels=dict(x="Hour of Day", y="Day of Week", color="Trip Count"),
+    x=heatmap_data.columns,
+    y=heatmap_data.index,
+    color_continuous_scale="YlGnBu"
+)
 
-    # ---- Plotly interactive heatmap ----
-    import plotly.express as px
-    fig = px.imshow(
-        heatmap_data,
-        labels=dict(x="Hour of Day", y="Day of Week", color="Trip Count"),
-        x=heatmap_data.columns,
-        y=heatmap_data.index,
-        color_continuous_scale="YlGnBu",
-        aspect="auto"
-    )
+fig.update_layout(
+    title="Interactive Heatmap of Trips by Hour and Weekday",
+    xaxis_title="Hour of Day",
+    yaxis_title="Day of Week",
+    yaxis=dict(categoryorder="array", categoryarray=heatmap_data.index)
+)
 
-    fig.update_layout(
-        title=f"Interactive Heatmap of Trips by Hour and Weekday ({filter_option})",
-        xaxis=dict(side="top"),
-        margin=dict(l=60, r=40, t=80, b=40)
-    )
+st.plotly_chart(fig, use_container_width=True)
 
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown("""
-    **Insights:**
-    - Clear **commuter peaks**: 7–9 AM and 5–7 PM on weekdays.  
-    - **Weekend demand** shifts to mid-day (10 AM–4 PM).  
-    - The toggle helps highlight weekday commuting vs. weekend leisure patterns.  
-    """)
+st.markdown("""
+**Insights:**
+- Clear **commuter peaks**: 7–9 AM and 5–7 PM on weekdays.  
+- **Weekend demand** shifts to mid-day (10 AM–4 PM).  
+- Time-of-day patterns highlight the need for **dynamic bike rebalancing**.
+""")
 
 # ========================= TRIP DURATION BY USER TYPE =========================
 elif page == "Trip Duration by User Type":
