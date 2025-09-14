@@ -70,7 +70,7 @@ if page == "Intro page":
     """)
     
     cover_image = Image.open("Tasks/spenser-sembrat-grJeAdDMxEc-unsplash.jpg")
-    st.image(cover_image, use_container_width=True)
+    st.image(cover_image, use_column_width=True)
 
 # ========================= WEATHER COMPONENT & BIKE USAGE =========================
 elif page == "Weather component and bike usage":
