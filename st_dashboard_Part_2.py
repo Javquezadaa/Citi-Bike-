@@ -28,13 +28,11 @@ page = st.sidebar.selectbox(
 )
 
 # ------------------------- LOAD DATA -------------------------
-uploaded_file = st.file_uploader("Upload your df_2022.csv", type="csv")
-
-if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file, parse_dates=['started_at','ended_at','date'])
-else:
-    st.warning("Please upload df_2022.csv to continue.")
-    st.stop()
+df = pd.read_csv(
+    "Compressed CSV files/df_2022.csv.gz",
+    compression="gzip",
+    parse_dates=['started_at','ended_at','date']
+)
 
 # ------------------------- CREATE COLUMNS -------------------------
 df['month'] = df['date'].dt.month.astype(int)
