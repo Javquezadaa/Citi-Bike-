@@ -73,10 +73,10 @@ if page == "Intro page":
     - Interactive map with aggregated bike trips  
     - Recommendations
     """)
-    
-   cover_image = Image.open("Tasks/spenser-sembrat-grJeAdDMxEc-unsplash.jpg")
-   st.image(cover_image, use_container_width=True)
 
+    def main():
+        cover_image = Image.open("Tasks/spenser-sembrat-grJeAdDMxEc-unsplash.jpg")
+        st.image(cover_image, use_container_width=True)
 # ========================= WEATHER COMPONENT & BIKE USAGE =========================
 elif page == "Weather component and bike usage":
     st.header("Daily Bike Rides vs Temperature")
