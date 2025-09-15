@@ -281,7 +281,7 @@ else:
     st.header("Conclusion and Recommendations")
     
     recs_image = Image.open("Tasks/broadway-5813302_1280.jpg")
-    st.image(recs_image, use_column_width=True)
+    st.image(recs_image, use_container_width=True)  # updated parameter
     
     st.markdown("### Strategic Recommendations for Citi Bike NYC")
     
