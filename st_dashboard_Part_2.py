@@ -28,7 +28,7 @@ page = st.sidebar.selectbox(
 )
 
 # ------------------------- LOAD DATA -------------------------
-df = pd.read_csv('./Data/df_2022.csv', parse_dates=['started_at','ended_at','date'])
+df = pd.read_csv('Data/df_2022.csv', parse_dates=['started_at','ended_at','date'])
 
 # ------------------------- CREATE COLUMNS -------------------------
 df['month'] = df['date'].dt.month.astype(int)
