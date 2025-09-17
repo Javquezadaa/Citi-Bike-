@@ -249,14 +249,18 @@ elif page == "Trip Duration by User Type":
             marker_color='blue' if user_type == 'member' else 'orange'
         ))
 
-        # Add annotation above the box
+        # Add annotation above the box with a visible tag
         fig_box.add_annotation(
             x=user_type,
-            y=y_data.max() * 1.05,  # 5% above max to stay in visible range
+            y=y_data.max() * 1.05,  # 5% above max
             text=f"n = {counts.get(user_type, 0)}",
             showarrow=False,
-            font=dict(size=12, color="black"),
-            align="center"
+            font=dict(size=14, color="white", family="Arial Black"),
+            align="center",
+            bgcolor="black",
+            bordercolor="white",
+            borderwidth=1,
+            borderpad=4
         )
 
     fig_box.update_layout(
@@ -264,17 +268,16 @@ elif page == "Trip Duration by User Type":
         xaxis_title="User Type",
         title="Distribution of Trip Duration by User Type",
         height=600,
-        margin=dict(t=100)  # give space at the top for annotations
+        margin=dict(t=120)  # more space for annotations
     )
 
     st.plotly_chart(fig_box, use_container_width=True)
 
-    st.markdown("""
+    st.markdown(f"""
     **Insights:**
     - **Members** tend to have shorter trips on average.  
     - **Casual riders** show longer trips for leisure or tourism.  
-    - User counts (number of trips) are now shown above each box.  
-    - No artificial filtering, so extreme trips are visible.
+    - **User counts:** Members = {counts.get('member', 0)}, Casual = {counts.get('casual', 0)}  
     """)
 # ========================= INTERACTIVE MAP =========================
 elif page == "Interactive map with aggregated bike trips":
