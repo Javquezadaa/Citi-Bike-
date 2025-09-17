@@ -316,54 +316,76 @@ else:
 
 **Conclusion:** These recommendations integrate **seasonality, location, time-of-day patterns, and bike maintenance**. Implementing them will improve bike availability, reduce customer complaints, and support strategic growth for Citi Bike NYC.
 """)
-    # ========================= TRIP DURATION & USER PATTERNS =========================
+# ========================= TRIP DURATION & USER PATTERNS =========================
 elif page == "Trip Duration & User Patterns":
-    st.header("Trip Duration and Time-of-Day Patterns by User Type")
+    st.header("Trip Duration & User Patterns by User Type")
+
+    # Ensure correct user_type column
+    if 'user_type' not in df.columns:
+        st.warning("Column 'user_type' not found in dataset.")
+        st.stop()
+
+    # --- 1. Trip Duration Box Plot ---
+    st.subheader("Trip Duration Differences")
     
-    # ---- Boxplot: Trip Duration ----
+    if 'duration_min' not in df.columns:
+        # Compute duration in minutes if not present
+        if 'ended_at' in df.columns and 'started_at' in df.columns:
+            df['duration_min'] = (df['ended_at'] - df['started_at']).dt.total_seconds() / 60
+        else:
+            st.warning("Cannot compute trip duration: missing columns.")
+            st.stop()
+
     fig_box = go.Figure()
+    colors = {'member': 'blue', 'casual': 'orange'}
     
-    for user_type in df['user_type'].unique():
+    for user in df['user_type'].unique():
         fig_box.add_trace(go.Box(
-            y=df[df['user_type'] == user_type]['duration_min'] if 'duration_min' in df.columns else None,
-            name=user_type,
+            y=df[df['user_type'] == user]['duration_min'],
+            name=user,
             boxpoints='outliers',
-            marker_color='blue' if user_type == 'member' else 'orange'
+            marker_color=colors.get(user, 'grey')
         ))
-    
+
     fig_box.update_layout(
         yaxis_title="Trip Duration (minutes)",
         xaxis_title="User Type",
-        title="Distribution of Trip Duration by User Type",
-        height=500
+        title="Trip Duration by User Type",
+        height=600
     )
-    
     st.plotly_chart(fig_box, use_container_width=True)
-    
-    # ---- Heatmap: Trips by Hour & Weekday per User Type ----
-    st.subheader("Trips by Hour and Weekday per User Type")
-    
+
+    st.markdown("""
+    **Insights – Duration:**  
+    - **Members** typically take shorter trips for commuting or errands.  
+    - **Casual users** show longer and more varied trips, indicating leisure or tourist rides.  
+    - Outliers (very long trips) are more common among casual riders.
+    """)
+
+    # --- 2. Time-of-Week Usage Heatmap ---
+    st.subheader("Weekly Usage Patterns")
+
+    df['weekday'] = df['started_at'].dt.day_name()
+    df['hour'] = df['started_at'].dt.hour
     weekday_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    
-    for user_type in df['user_type'].unique():
-        st.markdown(f"**{user_type.capitalize()} Riders**")
-        hourly = df[df['user_type'] == user_type].groupby(['weekday', 'hour']).size().reset_index(name='trip_count')
-        hourly['weekday'] = pd.Categorical(hourly['weekday'], categories=weekday_order, ordered=True)
-        heatmap_data = hourly.pivot(index="weekday", columns="hour", values="trip_count")
-        
-        fig, ax = plt.subplots(figsize=(14,4))
-        sns.heatmap(heatmap_data, cmap="YlOrRd", linewidths=.5, ax=ax)
-        ax.set_title(f"Trips by Hour and Weekday — {user_type.capitalize()} Riders")
+    df['weekday'] = pd.Categorical(df['weekday'], categories=weekday_order, ordered=True)
+
+    # Aggregate trips per hour and weekday for each user type
+    for user in df['user_type'].unique():
+        user_df = df[df['user_type'] == user]
+        heatmap_data = user_df.groupby(['weekday','hour']).size().reset_index(name='trip_count')
+        heatmap_data_pivot = heatmap_data.pivot(index='weekday', columns='hour', values='trip_count')
+
+        fig, ax = plt.subplots(figsize=(14,5))
+        sns.heatmap(heatmap_data_pivot, cmap='YlOrRd', linewidths=0.5, ax=ax)
+        ax.set_title(f"Trips by Hour and Weekday - {user.capitalize()}")
         ax.set_xlabel("Hour of Day")
         ax.set_ylabel("Day of Week")
         st.pyplot(fig)
-    
-    # ---- Insights ----
+
     st.markdown("""
-    **Insights:**
-    - **Members**: Shorter, more consistent trips; concentrated on weekdays during morning (7–9 AM) and evening (5–7 PM) commute times.  
-    - **Casual riders**: Longer, more variable trips; concentrated on weekends and mid-day hours, reflecting leisure and tourist use.  
-    - Combining duration and timing highlights operational needs:
-        - Prioritize bike availability at commuter peaks for members.
-        - Allocate bikes flexibly in leisure areas or tourist hotspots for casual riders.
+    **Insights – Weekly Patterns:**  
+    - **Members** ride mostly during weekday commuter peaks (7–9 AM, 5–7 PM).  
+    - **Casual users** ride more on weekends and during mid-day hours, showing leisure patterns.  
+    - These patterns help plan bike redistribution and prioritize availability at high-demand stations during peak times.
     """)
