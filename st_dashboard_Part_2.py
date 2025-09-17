@@ -231,20 +231,20 @@ elif page == "Hourly Heatmap":
 elif page == "Trip Duration by User Type":
     st.header("Trip Duration by User Type")
 
-    # Compute trip duration in minutes directly
+    # Compute trip duration in minutes
     df['duration_min'] = (df['ended_at'] - df['started_at']).dt.total_seconds() / 60
 
-    # Filter unrealistic trips (e.g., longer than 300 minutes)
-    df_filtered = df[df['duration_min'] <= 300].copy()  # use .copy() to avoid SettingWithCopyWarning
+    # Fix unrealistic high durations by assuming they were in seconds
+    df.loc[df['duration_min'] > 300, 'duration_min'] = df.loc[df['duration_min'] > 300, 'duration_min'] / 60
 
     fig_box = go.Figure()
 
-    for user_type in df_filtered['member_casual'].unique():
+    for user_type in df['member_casual'].unique():
         fig_box.add_trace(go.Box(
-            y=df_filtered[df_filtered['member_casual'] == user_type]['duration_min'],
+            y=df[df['member_casual'] == user_type]['duration_min'],
             name=user_type,
             boxpoints='outliers',
-            marker_color='blue' if user_type == 'member' else 'orange'
+            marker_color='blue' if user_type.lower() == 'member' else 'orange'
         ))
 
     fig_box.update_layout(
@@ -254,13 +254,13 @@ elif page == "Trip Duration by User Type":
         height=600
     )
 
-    st.plotly_chart(fig_box, width='stretch')  # updated for latest Streamlit
+    st.plotly_chart(fig_box, width='stretch')
 
     st.markdown("""
     **Insights:**
     - **Members** tend to have shorter trips on average, often using bikes for commuting or daily errands.  
     - **Casual riders** show a wider range of trip durations, including longer rides for leisure or tourism.  
-    - Filtering extreme trips (over 300 min) removes unrealistic outliers and gives a more accurate picture.  
+    - Very high trip durations have been corrected from seconds to minutes for accurate representation.  
     - Operationally, this suggests **peak-duration bikes** should prioritize members during morning/evening commutes, while casual riders’ trips are more spread throughout the day.  
     """)
 # ========================= INTERACTIVE MAP =========================
