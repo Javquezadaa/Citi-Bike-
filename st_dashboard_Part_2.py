@@ -68,9 +68,9 @@ if page == "Intro page":
 
     - Weather component and bike usage  
     - Most popular stations  
-    - Hourly Heatmap  
-    - Trip Duration by User Type  
-    - Interactive map with aggregated bike trips  
+    - Rides by hour and weekdays.
+    - Trip duration by user type  
+    - Most popular routes and stations map.
     - Recommendations
     """)
 
@@ -277,8 +277,8 @@ elif page == "Trip Duration by User Type":
 
     st.markdown(f"""
     **Insights:**
-    - **Members** tend to have shorter trips on average.  
-    - **Casual riders** show longer trips for leisure or tourism.  
+    - **Members** (Anual or monthly suscribers) tend to have shorter trips on average.  
+    - **Casual riders** (Single rides or Daily passes) show longer trips for leisure or tourism.  
     - **User counts:** Members = {counts.get('member', 0)}, Casual = {counts.get('casual', 0)}  
     """)
 # ========================= INTERACTIVE MAP =========================
