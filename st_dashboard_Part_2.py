@@ -231,11 +231,8 @@ elif page == "Hourly Heatmap":
 elif page == "Trip Duration by User Type":
     st.header("Trip Duration by User Type")
 
-    # Compute trip duration in minutes
+    # Compute trip duration in minutes (assuming original is in seconds)
     df['duration_min'] = (df['ended_at'] - df['started_at']).dt.total_seconds() / 60
-
-    # Fix unrealistic high durations by assuming they were in seconds
-    df.loc[df['duration_min'] > 300, 'duration_min'] = df.loc[df['duration_min'] > 300, 'duration_min'] / 60
 
     fig_box = go.Figure()
 
@@ -260,7 +257,7 @@ elif page == "Trip Duration by User Type":
     **Insights:**
     - **Members** tend to have shorter trips on average, often using bikes for commuting or daily errands.  
     - **Casual riders** show a wider range of trip durations, including longer rides for leisure or tourism.  
-    - Very high trip durations have been corrected from seconds to minutes for accurate representation.  
+    - All trip durations are now correctly represented in **minutes**.  
     - Operationally, this suggests **peak-duration bikes** should prioritize members during morning/evening commutes, while casual riders’ trips are more spread throughout the day.  
     """)
 # ========================= INTERACTIVE MAP =========================
