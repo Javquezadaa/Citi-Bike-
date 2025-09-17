@@ -223,7 +223,7 @@ elif page == "Hourly Heatmap":
     st.markdown("""
     **Insights:**
     - Clear **commuter peaks**: 7–9 AM and 5–7 PM on weekdays.  
-    - **Weekend demand** shifts to mid-day (10 AM–4 PM).  
+    - **Weekend demand** shifts to mid-day (10 AM-8PM).  
     - Time-of-day patterns highlight the need for **dynamic bike rebalancing**.
     """)
 
@@ -316,3 +316,54 @@ else:
 
 **Conclusion:** These recommendations integrate **seasonality, location, time-of-day patterns, and bike maintenance**. Implementing them will improve bike availability, reduce customer complaints, and support strategic growth for Citi Bike NYC.
 """)
+    # ========================= TRIP DURATION & USER PATTERNS =========================
+elif page == "Trip Duration & User Patterns":
+    st.header("Trip Duration and Time-of-Day Patterns by User Type")
+    
+    # ---- Boxplot: Trip Duration ----
+    fig_box = go.Figure()
+    
+    for user_type in df['user_type'].unique():
+        fig_box.add_trace(go.Box(
+            y=df[df['user_type'] == user_type]['duration_min'] if 'duration_min' in df.columns else None,
+            name=user_type,
+            boxpoints='outliers',
+            marker_color='blue' if user_type == 'member' else 'orange'
+        ))
+    
+    fig_box.update_layout(
+        yaxis_title="Trip Duration (minutes)",
+        xaxis_title="User Type",
+        title="Distribution of Trip Duration by User Type",
+        height=500
+    )
+    
+    st.plotly_chart(fig_box, use_container_width=True)
+    
+    # ---- Heatmap: Trips by Hour & Weekday per User Type ----
+    st.subheader("Trips by Hour and Weekday per User Type")
+    
+    weekday_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    
+    for user_type in df['user_type'].unique():
+        st.markdown(f"**{user_type.capitalize()} Riders**")
+        hourly = df[df['user_type'] == user_type].groupby(['weekday', 'hour']).size().reset_index(name='trip_count')
+        hourly['weekday'] = pd.Categorical(hourly['weekday'], categories=weekday_order, ordered=True)
+        heatmap_data = hourly.pivot(index="weekday", columns="hour", values="trip_count")
+        
+        fig, ax = plt.subplots(figsize=(14,4))
+        sns.heatmap(heatmap_data, cmap="YlOrRd", linewidths=.5, ax=ax)
+        ax.set_title(f"Trips by Hour and Weekday — {user_type.capitalize()} Riders")
+        ax.set_xlabel("Hour of Day")
+        ax.set_ylabel("Day of Week")
+        st.pyplot(fig)
+    
+    # ---- Insights ----
+    st.markdown("""
+    **Insights:**
+    - **Members**: Shorter, more consistent trips; concentrated on weekdays during morning (7–9 AM) and evening (5–7 PM) commute times.  
+    - **Casual riders**: Longer, more variable trips; concentrated on weekends and mid-day hours, reflecting leisure and tourist use.  
+    - Combining duration and timing highlights operational needs:
+        - Prioritize bike availability at commuter peaks for members.
+        - Allocate bikes flexibly in leisure areas or tourist hotspots for casual riders.
+    """)
