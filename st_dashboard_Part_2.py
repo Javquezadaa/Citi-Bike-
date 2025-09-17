@@ -231,11 +231,10 @@ elif page == "Hourly Heatmap":
 elif page == "Trip Duration by User Type":
     st.header("Trip Duration by User Type")
 
-    # Compute trip duration in minutes
-    df['duration_sec'] = (df['ended_at'] - df['started_at']).dt.total_seconds()
-    df['duration_min'] = df['duration_sec'] / 60
+    # Compute trip duration in minutes directly
+    df['duration_min'] = (df['ended_at'] - df['started_at']).dt.total_seconds() / 60
 
-    # Filter unrealistic trips (e.g., more than 300 minutes)
+    # Filter unrealistic trips (e.g., longer than 300 minutes)
     df_filtered = df[df['duration_min'] <= 300]
 
     fig_box = go.Figure()
@@ -324,3 +323,9 @@ else:
 
 **Conclusion:** These recommendations integrate **seasonality, location, time-of-day patterns, and bike maintenance**. Implementing them will improve bike availability, reduce customer complaints, and support strategic growth for Citi Bike NYC.
 """)
+
+# Check exact column names
+print(df.columns.tolist())
+
+# Strip whitespace just in case
+df.columns = df.columns.str.strip()
