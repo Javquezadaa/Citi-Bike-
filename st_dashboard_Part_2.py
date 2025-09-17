@@ -231,17 +231,30 @@ elif page == "Hourly Heatmap":
 elif page == "Trip Duration by User Type":
     st.header("Trip Duration by User Type")
 
+    # Convert duration to minutes (assuming df['duration_min'] is in seconds)
     df['duration_min'] = df['duration_min'] / 60
 
     fig_box = go.Figure()
 
-    for user_type in df['member_casual'].unique():  
+    # Count users
+    counts = df['member_casual'].value_counts()
+
+    for user_type in df['member_casual'].unique():  # use your actual user type column
         fig_box.add_trace(go.Box(
             y=df[df['member_casual'] == user_type]['duration_min'],
             name=user_type,
             boxpoints='outliers',
             marker_color='blue' if user_type == 'member' else 'orange'
         ))
+
+        # Add annotation with count on top of the box
+        fig_box.add_annotation(
+            x=user_type,
+            y=df['duration_min'].max() + 5,  # slightly above the max duration
+            text=f"n = {counts.get(user_type, 0)}",
+            showarrow=False,
+            font=dict(size=12, color="black")
+        )
 
     fig_box.update_layout(
         yaxis_title="Trip Duration (minutes)",
@@ -256,6 +269,7 @@ elif page == "Trip Duration by User Type":
     **Insights:**
     - **Members** tend to have shorter trips on average.  
     - **Casual riders** show longer trips for leisure or tourism.  
+    - Counts of each user type are shown above the boxes.
     """)
 # ========================= INTERACTIVE MAP =========================
 elif page == "Interactive map with aggregated bike trips":
