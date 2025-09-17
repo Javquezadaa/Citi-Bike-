@@ -249,10 +249,12 @@ elif page == "Trip Duration by User Type":
             marker_color='blue' if user_type == 'member' else 'orange'
         ))
 
-        # Add annotation above the box with a visible tag
+        # Use 75th percentile + small offset for floating tag
+        y_tag = y_data.quantile(0.75) * 1.05
+
         fig_box.add_annotation(
             x=user_type,
-            y=y_data.max() * 1.05,  # 5% above max
+            y=y_tag,
             text=f"n = {counts.get(user_type, 0)}",
             showarrow=False,
             font=dict(size=14, color="white", family="Arial Black"),
@@ -268,7 +270,7 @@ elif page == "Trip Duration by User Type":
         xaxis_title="User Type",
         title="Distribution of Trip Duration by User Type",
         height=600,
-        margin=dict(t=120)  # more space for annotations
+        margin=dict(t=120)  # space for annotations
     )
 
     st.plotly_chart(fig_box, use_container_width=True)
