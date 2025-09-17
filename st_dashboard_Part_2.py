@@ -231,7 +231,7 @@ elif page == "Hourly Heatmap":
 elif page == "Trip Duration by User Type":
     st.header("Trip Duration by User Type")
 
-    # Convert duration to minutes
+    # Convert duration to minutes (assuming df['duration_min'] is in seconds)
     df['duration_min'] = df['duration_min'] / 60
 
     fig_box = go.Figure()
@@ -249,57 +249,32 @@ elif page == "Trip Duration by User Type":
             marker_color='blue' if user_type == 'member' else 'orange'
         ))
 
-        # Add annotation above the box (larger and higher)
+        # Add annotation above the box
         fig_box.add_annotation(
             x=user_type,
-            y=y_data.max() * 1.2,  # increase space above whisker
+            y=y_data.max() * 1.05,  # 5% above max to stay in visible range
             text=f"n = {counts.get(user_type, 0)}",
             showarrow=False,
-            font=dict(size=16, color="black", family="Arial Black"),
+            font=dict(size=12, color="black"),
             align="center"
         )
-
-    # Add Citi Bike cost zones as horizontal rectangles
-    fig_box.add_shape(
-        type="rect",
-        x0=-0.5, x1=1.5,
-        y0=0, y1=30,
-        fillcolor="green", opacity=0.1, line_width=0
-    )
-    fig_box.add_shape(
-        type="rect",
-        x0=-0.5, x1=1.5,
-        y0=30, y1=45,
-        fillcolor="yellow", opacity=0.1, line_width=0
-    )
-    fig_box.add_shape(
-        type="rect",
-        x0=-0.5, x1=1.5,
-        y0=45, y1=df['duration_min'].max()*1.3,
-        fillcolor="red", opacity=0.1, line_width=0
-    )
-
-    # Add labels for cost zones
-    fig_box.add_annotation(x=1.2, y=15, text="Casual Free", showarrow=False, font=dict(color="green", size=14))
-    fig_box.add_annotation(x=1.2, y=37.5, text="Member Free", showarrow=False, font=dict(color="goldenrod", size=14))
-    fig_box.add_annotation(x=1.2, y=50, text="Extra Cost", showarrow=False, font=dict(color="red", size=14))
 
     fig_box.update_layout(
         yaxis_title="Trip Duration (minutes)",
         xaxis_title="User Type",
-        title="Distribution of Trip Duration by User Type with Cost Zones",
-        height=700,  # increase figure height
-        margin=dict(t=150)  # more top margin to accommodate larger annotations
+        title="Distribution of Trip Duration by User Type",
+        height=600,
+        margin=dict(t=100)  # give space at the top for annotations
     )
 
     st.plotly_chart(fig_box, use_container_width=True)
 
     st.markdown("""
     **Insights:**
-    - **Members** mostly stay within the 45-minute free zone, so trips are cheaper.  
-    - **Casual riders** often go beyond 30 minutes, entering the paid zone.  
-    - Colored bands indicate Citi Bike pricing: green = free for casual, yellow = free for members, red = additional cost.  
-    - `n = X` shows the number of trips per user type.
+    - **Members** tend to have shorter trips on average.  
+    - **Casual riders** show longer trips for leisure or tourism.  
+    - User counts (number of trips) are now shown above each box.  
+    - No artificial filtering, so extreme trips are visible.
     """)
 # ========================= INTERACTIVE MAP =========================
 elif page == "Interactive map with aggregated bike trips":
