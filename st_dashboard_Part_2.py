@@ -236,21 +236,23 @@ elif page == "Trip Duration by User Type":
 
     fig_box = go.Figure()
 
-    # Count users
+    # Count users per type
     counts = df['member_casual'].value_counts()
 
-    for user_type in df['member_casual'].unique():  # use your actual user type column
+    for user_type in df['member_casual'].unique():
+        y_data = df[df['member_casual'] == user_type]['duration_min']
+
         fig_box.add_trace(go.Box(
-            y=df[df['member_casual'] == user_type]['duration_min'],
+            y=y_data,
             name=user_type,
             boxpoints='outliers',
             marker_color='blue' if user_type == 'member' else 'orange'
         ))
 
-        # Add annotation with count on top of the box
+        # Add annotation above the box for user count
         fig_box.add_annotation(
             x=user_type,
-            y=df['duration_min'].max() + 5,  # slightly above the max duration
+            y=y_data.max() + 5,  # adjust 5 for spacing
             text=f"n = {counts.get(user_type, 0)}",
             showarrow=False,
             font=dict(size=12, color="black")
@@ -263,13 +265,12 @@ elif page == "Trip Duration by User Type":
         height=600
     )
 
-    st.plotly_chart(fig_box, width='stretch')
+    st.plotly_chart(fig_box, use_container_width=True)
 
     st.markdown("""
     **Insights:**
     - **Members** tend to have shorter trips on average.  
     - **Casual riders** show longer trips for leisure or tourism.  
-    - Counts of each user type are shown above the boxes.
     """)
 # ========================= INTERACTIVE MAP =========================
 elif page == "Interactive map with aggregated bike trips":
