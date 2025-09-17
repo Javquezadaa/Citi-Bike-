@@ -235,13 +235,13 @@ elif page == "Trip Duration by User Type":
     df['duration_min'] = (df['ended_at'] - df['started_at']).dt.total_seconds() / 60
 
     # Filter unrealistic trips (e.g., longer than 300 minutes)
-    df_filtered = df[df['duration_min'] <= 300]
+    df_filtered = df[df['duration_min'] <= 300].copy()  # use .copy() to avoid SettingWithCopyWarning
 
     fig_box = go.Figure()
 
-    for user_type in df_filtered['user_type'].unique():
+    for user_type in df_filtered['member_casual'].unique():
         fig_box.add_trace(go.Box(
-            y=df_filtered[df_filtered['user_type'] == user_type]['duration_min'],
+            y=df_filtered[df_filtered['member_casual'] == user_type]['duration_min'],
             name=user_type,
             boxpoints='outliers',
             marker_color='blue' if user_type == 'member' else 'orange'
@@ -263,7 +263,6 @@ elif page == "Trip Duration by User Type":
     - Filtering extreme trips (over 300 min) removes unrealistic outliers and gives a more accurate picture.  
     - Operationally, this suggests **peak-duration bikes** should prioritize members during morning/evening commutes, while casual riders’ trips are more spread throughout the day.  
     """)
-
 # ========================= INTERACTIVE MAP =========================
 elif page == "Interactive map with aggregated bike trips":
     st.header("Aggregated Bike Trips in NYC")
