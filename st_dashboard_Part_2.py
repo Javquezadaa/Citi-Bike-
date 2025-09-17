@@ -230,31 +230,42 @@ elif page == "Hourly Heatmap":
 # ========================= TRIP DURATION BY USER TYPE =========================
 elif page == "Trip Duration by User Type":
     st.header("Trip Duration by User Type")
-    
+
+    # Calculate duration in minutes (if not already done)
+    df['duration_min'] = (df['ended_at'] - df['started_at']).dt.total_seconds() / 60
+
+    # Filter out unrealistic trip durations
+    df_filtered = df[
+        ((df['member_casual'] == 'member') & (df['duration_min'] > 0) & (df['duration_min'] < 180)) |
+        ((df['member_casual'] == 'casual') & (df['duration_min'] > 0) & (df['duration_min'] < 600))
+    ]
+
+    # Create box plot
     fig_box = go.Figure()
-    
-    for user_type in df['member_casual'].unique():
+
+    for user_type in df_filtered['member_casual'].unique():
         fig_box.add_trace(go.Box(
-            y=df[df['member_casual'] == user_type]['duration_min'],
+            y=df_filtered[df_filtered['member_casual'] == user_type]['duration_min'],
             name=user_type,
             boxpoints='outliers',
             marker_color='blue' if user_type == 'member' else 'orange'
         ))
-    
+
     fig_box.update_layout(
         yaxis_title="Trip Duration (minutes)",
         xaxis_title="User Type",
         title="Distribution of Trip Duration by User Type",
         height=600
     )
-    
+
     st.plotly_chart(fig_box, use_container_width=True)
+
     st.markdown("""
     **Insights:**
     - **Members** tend to have shorter trips on average, often using bikes for commuting or daily errands.  
-    - **Casual riders** show a wider range of trip durations, including many longer rides, indicating leisure or tourist usage.  
-    - Outliers (extremely long trips) are more common among casual users.  
-    - Operationally, this suggests **peak-duration bikes** should be prioritized for members in the morning/evening commute, while casual riders’ trips are more spread throughout the day.  
+    - **Casual riders** show a wider range of trip durations, including longer rides, indicating leisure or tourist usage.  
+    - Outliers (extremely long trips) are now filtered to avoid data errors.  
+    - Operationally, this suggests **peak-duration bikes** should be prioritized for members during morning/evening commutes, while casual riders’ trips are more spread throughout the day.  
     """)
 
 # ========================= INTERACTIVE MAP =========================
