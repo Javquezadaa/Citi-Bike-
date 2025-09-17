@@ -231,12 +231,12 @@ elif page == "Hourly Heatmap":
 elif page == "Trip Duration by User Type":
     st.header("Trip Duration by User Type")
 
-    # Compute trip duration in minutes
-    df['duration_min'] = (df['ended_at'] - df['started_at']).dt.total_seconds() / 60
+    # Convert duration to minutes (assuming df['duration_min'] is in seconds)
+    df['duration_min'] = df['duration_min'] / 60
 
     fig_box = go.Figure()
 
-    for user_type in df['member_casual'].unique():
+    for user_type in df['member_casual'].unique():  # use your actual user type column
         fig_box.add_trace(go.Box(
             y=df[df['member_casual'] == user_type]['duration_min'],
             name=user_type,
@@ -245,7 +245,7 @@ elif page == "Trip Duration by User Type":
         ))
 
     fig_box.update_layout(
-        yaxis=dict(title="Trip Duration (minutes)", range=[0, 180]),  # cap at 3 hours
+        yaxis_title="Trip Duration (minutes)",
         xaxis_title="User Type",
         title="Distribution of Trip Duration by User Type",
         height=600
@@ -255,10 +255,9 @@ elif page == "Trip Duration by User Type":
 
     st.markdown("""
     **Insights:**
-    - **Members** tend to have shorter trips on average, often using bikes for commuting or daily errands.  
-    - **Casual riders** show a wider range of trip durations, including longer rides for leisure or tourism.  
-    - By capping the Y-axis at 180 minutes, we focus on the majority of trips while still preserving the overall distribution.  
-    - Operationally, this suggests **peak-duration bikes** should prioritize members during morning/evening commutes, while casual riders’ trips are more spread throughout the day.  
+    - **Members** tend to have shorter trips on average.  
+    - **Casual riders** show longer trips for leisure or tourism.  
+    - No artificial filtering, so extreme trips are visible.
     """)
 # ========================= INTERACTIVE MAP =========================
 elif page == "Interactive map with aggregated bike trips":
